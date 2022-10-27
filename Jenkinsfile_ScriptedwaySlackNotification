@@ -42,12 +42,12 @@ node
    
     finally {
         // Success or failure, always send notifications
-        notifyBuild(currentBuild.result)
+        slacknotifications(currentBuild.result)
     }//finally
 
 }//node
 
-def buildnotifications(String buildStatus = 'STARTED') {
+def slacknotifications(String buildStatus = 'STARTED') {
   // build status of null means successful
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
