@@ -17,7 +17,7 @@ node
         stage('MavenBuild'){
         sh "${mavenver}/bin/mvn clean package"
         }//MavenBuild
-
+    /*
         stage('ExecuteSonarQubeReport'){
         sh "${mavenver}/bin/mvn sonar:sonar"
         }//ExecuteSonarQubeReport
@@ -31,7 +31,7 @@ node
         sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.36.91:/opt/tomcat/webapps/"
         }//sshagent
         }//DeployToTomcat
-
+    */
     }//try block
 
     catch (e) {
