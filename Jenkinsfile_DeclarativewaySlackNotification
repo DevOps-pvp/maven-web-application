@@ -5,7 +5,7 @@ pipeline{
     tools{
         maven "Maven V3.8.6"
     }//tools
-    
+    //test
     stages{
         stage('pipeline-started'){
         steps{
