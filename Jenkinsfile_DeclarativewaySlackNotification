@@ -1,3 +1,4 @@
+properties([[$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([githubPush()])])
 pipeline{
     agent any
     
