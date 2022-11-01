@@ -1,0 +1,43 @@
+pipeline{
+    agent any
+    
+    tools{
+        maven "Maven V3.8.6"
+    }//tools
+    
+    stages{
+        
+        stage('CheckoutCode'){
+           steps{
+               git branch: 'development', credentialsId: '1f554e08-c1a6-4154-a352-be4158aa1bcf', url: 'https://github.com/DevOps-pvp/maven-web-application.git'
+           } //step
+        }//stage_CheckoutCode
+    
+        stage('MavenBuild'){
+           steps{
+               sh "mvn clean package"
+           }//step 
+        }//stage_MavenBuild
+        
+        stage('ExecuteSonarQubeReport'){
+            steps{
+                sh "mvn sonar:sonar"
+            }//step
+        }//stage_ExecuteSonarQubeReport
+        
+        stage('UploadArtifactinotNexus'){
+            steps{
+                sh "mvn deploy"
+            }
+        }//stage_UploadArtifactinotNexus
+        
+        stage('DeployIntoTomcat'){
+            steps{
+                sshagent(['tomcatSsh']) {
+                       sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.36.91:/opt/tomcat/webapps/"
+                }
+            }//step
+        }//stage_DeployIntoTomcat
+        
+    }//stages  
+}//pipeline
