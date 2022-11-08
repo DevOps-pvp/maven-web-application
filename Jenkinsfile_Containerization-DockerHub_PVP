@@ -38,8 +38,8 @@ pipeline{
         stage("scp Master to Docker_Slave"){
             steps{
                 sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
-                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/"
-                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/"
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Docker_Pvp/"
+                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Docker_Pvp/"
                 }//sshagent
             }//step
         }//stage
@@ -49,7 +49,7 @@ pipeline{
             steps{
                 node ("DockerBuild_Slave"){
                     sh "pwd"
-                    sh "docker build -t dockerpvp/mavenmppdockerize:1.1 /home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/" 
+                    sh "docker build -t dockerpvp/mavenmppdockerize:1.1 ." 
                     sh "docker images"
                     sh "docker login -u dockerpvp -p DevOps@3642"
                     sh "docker push dockerpvp/mavenmppdockerize:1.1"
