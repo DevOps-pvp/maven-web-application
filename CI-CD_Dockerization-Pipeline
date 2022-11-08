@@ -24,20 +24,28 @@ pipeline{
             }//steps
         }//Stage_Maven Build
         
-       // Copying Application package & Dockerfile to Docker_slave Server
+        
+        stage("SonarQube Report"){
+            steps{
+                sh "mvn sonar:sonar"
+            }//steps
+        }//stage_SonarQube Report
+        
+       
+       // Copying Application package & Dockerfile from Master to Docker_slave Server
         stage("scp Master to Docker_Slave"){
             steps{
                 sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
                     sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/maven-web-application.war"
-                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/"
+                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/Dockerfile"
                 }//sshagent
             }//step
         }//stage
         
-        //Switching from master to Docker_slave ...And Build the image
+        //Switching from master to DockerBuild_slave ... Build the image & Push to DockerHub
         stage("Switching to Docker Slave & Build"){
             steps{
-                node ("D-Slave"){
+                node ("DockerBuild_Slave"){
                     sh "docker build -t dockerpvp/mavenmppdockerize:1.1 /home/ubuntu/docker_slave/Applications/" 
                     sh "docker images"
                     sh "docker login -u dockerpvp -p DevOps@3642"
@@ -47,43 +55,19 @@ pipeline{
         }//stage
     
         
+        //Switching to DockerDeploy_Slave ... Pull the image, Create the container & Start the container
         stage("Pull & Run Container"){
             steps{
-                node ("Docker-Deploy"){
+                node ("DockerDeploy_Slave"){
                     sh "docker login -u dockerpvp -p DevOps@3642"
                     sh "docker pull dockerpvp/mavenmppdockerize:1.1"
+                    sh "docker rm -f mavencontainer"
                     sh "docker create --name mavencontainer -p 8080:8080 dockerpvp/mavenmppdockerize:1.1"
                     sh "docker start mavencontainer"
                     sh "docker ps"
                 }//node
             }//steps
         }//stage
-                
-    
-    /*
-        stage("SonarQube Report"){
-            steps{
-                sh "mvn sonar:sonar"
-            }//steps
-        }//stage_SonarQube Report
-        
-        
-        stage("Upload to Nexus"){
-            steps{
-                sh "mvn deploy"
-            }//steps
-        }//stage_Upload to Nexus  
-    
-        
-        stage("Deploy to TomactServer"){
-            steps{
-                sshagent(['tomcatSsh']) {
-                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.36.91:/opt/tomcat/webapps/"
-                }//sshagent
-            }//steps
-        }//Deploy to TomactServer 
-    */    
-    
-        
+   
     }//stages
 }//pipeline
