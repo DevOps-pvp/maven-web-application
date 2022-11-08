@@ -1,0 +1,89 @@
+pipeline{
+    agent
+    {
+        label "master_pvp"
+    }//agent
+    
+    tools{
+        maven "Maven V3.8.6"
+    }//tools
+    
+    
+    stages{
+        
+        stage("Checkout Code"){
+            steps{
+                git credentialsId: '1f554e08-c1a6-4154-a352-be4158aa1bcf', url: 'https://github.com/DevOps-pvp/maven-web-application.git'
+            }//steps
+        }//stage_Checkout Code
+    
+        
+        stage("Maven Build"){
+            steps{
+                sh "mvn clean package"
+            }//steps
+        }//Stage_Maven Build
+        
+       // Copying Application package & Dockerfile to Docker_slave Server
+        stage("scp Master to Docker_Slave"){
+            steps{
+                sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/maven-web-application.war"
+                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/"
+                }//sshagent
+            }//step
+        }//stage
+        
+        //Switching from master to Docker_slave ...And Build the image
+        stage("Switching to Docker Slave & Build"){
+            steps{
+                node ("D-Slave"){
+                    sh "docker build -t dockerpvp/mavenmppdockerize:1.1 /home/ubuntu/docker_slave/Applications/" 
+                    sh "docker images"
+                    sh "docker login -u dockerpvp -p DevOps@3642"
+                    sh "docker push dockerpvp/mavenmppdockerize:1.1"
+                }//node
+            }//steps
+        }//stage
+    
+        
+        stage("Pull & Run Container"){
+            steps{
+                node ("Docker-Deploy"){
+                    sh "docker login -u dockerpvp -p DevOps@3642"
+                    sh "docker pull dockerpvp/mavenmppdockerize:1.1"
+                    sh "docker create --name mavencontainer -p 8080:8080 dockerpvp/mavenmppdockerize:1.1"
+                    sh "docker start mavencontainer"
+                    sh "docker ps"
+                }//node
+            }//steps
+        }//stage
+                
+    
+    /*
+        stage("SonarQube Report"){
+            steps{
+                sh "mvn sonar:sonar"
+            }//steps
+        }//stage_SonarQube Report
+        
+        
+        stage("Upload to Nexus"){
+            steps{
+                sh "mvn deploy"
+            }//steps
+        }//stage_Upload to Nexus  
+    
+        
+        stage("Deploy to TomactServer"){
+            steps{
+                sshagent(['tomcatSsh']) {
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.36.91:/opt/tomcat/webapps/"
+                }//sshagent
+            }//steps
+        }//Deploy to TomactServer 
+    */    
+    
+        
+    }//stages
+}//pipeline
