@@ -36,8 +36,8 @@ pipeline{
         stage("scp Master to Docker_Slave"){
             steps{
                 sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
-                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/maven-web-application.war"
-                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/Dockerfile"
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/"
+                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/"
                 }//sshagent
             }//step
         }//stage
@@ -46,7 +46,8 @@ pipeline{
         stage("Switching to Docker Slave & Build"){
             steps{
                 node ("DockerBuild_Slave"){
-                    sh "docker build -t 816273016234.dkr.ecr.ap-south-1.amazonaws.com/mavenwebapp:latest /home/ubuntu/docker_slave/Applications/" 
+                    sh "pwd"
+                    sh "docker build -t 816273016234.dkr.ecr.ap-south-1.amazonaws.com/mavenwebapp:latest ." 
                     sh "docker images"
                     sh "aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 816273016234.dkr.ecr.ap-south-1.amazonaws.com"
                     sh "docker push 816273016234.dkr.ecr.ap-south-1.amazonaws.com/mavenwebapp:latest"
@@ -59,6 +60,7 @@ pipeline{
         stage("Pull & Run Container"){
             steps{
                 node ("DockerDeploy_Slave"){
+                    sh "pwd"
                     sh "aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 816273016234.dkr.ecr.ap-south-1.amazonaws.com"
                     sh "docker pull 816273016234.dkr.ecr.ap-south-1.amazonaws.com/mavenwebapp:latest"
                     sh "docker rm -f mavencontainer"
