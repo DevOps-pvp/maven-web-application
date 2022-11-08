@@ -25,19 +25,21 @@ pipeline{
         }//Stage_Maven Build
         
         
+        /*
         stage("SonarQube Report"){
             steps{
                 sh "mvn sonar:sonar"
             }//steps
         }//stage_SonarQube Report
+        */
         
        
        // Copying Application package & Dockerfile from Master to Docker_slave Server
         stage("scp Master to Docker_Slave"){
             steps{
                 sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
-                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/maven-web-application.war"
-                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/Applications/Dockerfile"
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/"
+                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/"
                 }//sshagent
             }//step
         }//stage
@@ -46,7 +48,8 @@ pipeline{
         stage("Switching to Docker Slave & Build"){
             steps{
                 node ("DockerBuild_Slave"){
-                    sh "docker build -t dockerpvp/mavenmppdockerize:1.1 /home/ubuntu/docker_slave/Applications/" 
+                    sh "pwd"
+                    sh "docker build -t dockerpvp/mavenmppdockerize:1.1 /home/ubuntu/docker_slave/workspace/Mavenwebapp-Dockerize-ECR_Pvp/" 
                     sh "docker images"
                     sh "docker login -u dockerpvp -p DevOps@3642"
                     sh "docker push dockerpvp/mavenmppdockerize:1.1"
@@ -59,6 +62,7 @@ pipeline{
         stage("Pull & Run Container"){
             steps{
                 node ("DockerDeploy_Slave"){
+                    sh "pwd"
                     sh "docker login -u dockerpvp -p DevOps@3642"
                     sh "docker pull dockerpvp/mavenmppdockerize:1.1"
                     sh "docker rm -f mavencontainer"
@@ -68,6 +72,6 @@ pipeline{
                 }//node
             }//steps
         }//stage
-   
+         
     }//stages
 }//pipeline
