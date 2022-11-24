@@ -14,5 +14,5 @@ networks:
     external: true
     
 volumes:
-  ubuntu_MongoVol_EBS-pvp
+  ubuntu_MongoVol_EBS-pvp:
     external: true
