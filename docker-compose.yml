@@ -6,6 +6,11 @@ services:
     - 8080:8080
     networks:
     - custombridge
+    volumes:
+    - TestVol
 networks:
   custombridge:
+    external: true
+volumes:
+  TestVol:
     external: true
