@@ -1,0 +1,52 @@
+pipeline{
+    //def buildName = ${env.BUILD_NUMBER}
+    agent{
+        label 'master_pvp'
+    }
+    
+    tools{
+        maven 'Maven V3.8.5'
+    }//tools
+    
+    stages{
+        stage("CheckoutCode"){
+            steps{
+                git credentialsId: '1f554e08-c1a6-4154-a352-be4158aa1bcf', url: 'https://github.com/DevOps-pvp/maven-web-application.git'
+            }//steps
+        }//stage_CheckoutCode
+        
+        stage("MavenBuild"){
+            steps{
+                sh "mvn clean package"
+            }//steps
+        }//stage_MavenBuild
+
+        stage("SSH_DockerBuildServer"){
+            steps{
+                sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ubuntu@172.31.5.161:/home/ubuntu/Project1/"
+                    sh "scp -o StrictHostKeyChecking=no Dockerfile ubuntu@172.31.5.161:/home/ubuntu/Project1/"
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.5.161 docker build -t dockerpvp/mavenwebapp:${env.BUILD_NUMBER} /home/ubuntu/Project1/"
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.5.161 docker login -u dockerpvp -p DevOps@3642"
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.5.161 docker push dockerpvp/mavenwebapp:${env.BUILD_NUMBER}"
+                }//sshagent
+            }//steps
+        }//SSH_DockerBuildServer
+   
+        stage("SSH_DockerDeployServer"){
+            steps{
+                sshagent(['2ca474ad-2ee3-4c96-9017-e40f0e759f21']) {
+                   sh "scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@172.31.15.167:/home/ubuntu/Project1/"
+                   sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.15.167 sed -i s/TAG/${env.BUILD_NUMBER}/ig /home/ubuntu/Project1/docker-compose.yml"
+                   sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.15.167 docker login -u dockerpvp -p DevOps@3642"
+                   sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.15.167  docker-compose -f /home/ubuntu/Project1/docker-compose.yml up -d"
+                   //sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.15.167 pwd"
+                   //sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.15.167 docker-compose up -d"
+                   sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.15.167 docker-compose ps"
+                }//sshagent
+            }//steps
+        }//SSH_DockerDeployServer
+       
+        
+    }//stages
+}//pipeline
