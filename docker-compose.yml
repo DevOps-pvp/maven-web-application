@@ -6,7 +6,13 @@ services:
     - 8080:8080
     networks:
     - custombridge
+    volumes:
+    - ubuntu_MongoVol_EBS-pvp
    
 networks:
   custombridge:
+    external: true
+    
+volumes:
+  ubuntu_MongoVol_EBS-pvp
     external: true
