@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   mavenwebapp:
-    image: dockerpvp/maven-web-application:VERSION
+    image: dockerpvp/maven-web-application:TAG
     ports:
     - 8080:8080
     networks:
