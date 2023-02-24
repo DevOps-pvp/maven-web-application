@@ -10,7 +10,7 @@ metadata:
 spec:
   containers:
    - name: mavenwebapp-cont
-     image: dockerpvp/mavenproject:${env.BUILD_NUMBER}
+     image: dockerpvp/mavenproject:17
      ports:
      - containerPort: 8080
 
